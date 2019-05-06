@@ -23,13 +23,13 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// Dialog Data
+	// Dialog Data
 	enum { IDD = IDD_ABOUTBOX };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
-// Implementation
+	// Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -52,7 +52,7 @@ END_MESSAGE_MAP()
 
 
 CLoadingFileDlg::CLoadingFileDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(CLoadingFileDlg::IDD, pParent)
+: CDialogEx(CLoadingFileDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_strFolderPath = "";
@@ -201,7 +201,7 @@ void CLoadingFileDlg::OnBnClickedBtnCal()
 {
 	m_iFileCurrentNumber = 0;
 	m_bCancel = FALSE;
-	if (m_strFolderPath=="")
+	if (m_strFolderPath == "")
 	{
 		MessageBox(L"Select folder before calculate");
 	}
@@ -217,60 +217,9 @@ void CLoadingFileDlg::OnBnClickedBtnCal()
 }
 
 
-/*
-UINT CLoadingFileDlg::ExecuteMyThread(LPVOID pParam)
-{
-	//send value progress
-	CLoadingFileDlg *Dlg = (CLoadingFileDlg*)pParam;
-	Dlg->FileHanding(); //File handing is non-static
-	return 0;
-}
 
-void CLoadingFileDlg::FileHanding()
-{
-	CountFileDelay(m_strFolderPath, m_iFileCurrentNumber);
-}
+//struct SCountFile////{////	CString m_strFolderPath;////	HWND m_hwndLoadingDlg;////	HWND m_hwndProgressDlg;////////	SCountFile(CString strFolderPath, HWND hwndLoadingDlg, HWND hwndProgressDlg)////	{////		this->m_strFolderPath = strFolderPath;////		this->m_hwndLoadingDlg = hwndLoadingDlg;////		this->m_hwndProgressDlg = hwndProgressDlg;////	}//};//LRESULT CLoadingFileDlg::OnReceiveHWNDMessages(WPARAM wParam, LPARAM lParam)////{////	HWND hwndTemp = (HWND)wParam;////	m_hwndProgressDlg = hwndTemp;////////	// start a count file task on other thread////	SCountFile* pTask = new SCountFile(m_strFolderPath, m_hwndLoadingDlg, m_hwndProgressDlg);////	m_pMyThread = AfxBeginThread(ExecuteMyThread, pTask);////////	return 0L;////}////////UINT CLoadingFileDlg::ExecuteMyThread(LPVOID pParam)////{////	//count and send value progress////	SCountFile *pTask = (SCountFile*)pParam;////	int iCount = 0;////	HandleFileTest(pTask->m_strFolderPath, iCount, pTask->m_hwndLoadingDlg, pTask->m_hwndProgressDlg);////	return 0;////}////////void CLoadingFileDlg::HandleFileTest(CString strPath, int& iCount, HWND hwndLoadingDlg, HWND hwndProgressDlg)////{////	CString strRootFolderPath = strPath + _T("\\*.*");////	CFileFind cfFinder;////	CString strFilePath;////	BOOL bShouldFinished = FALSE;////////	BOOL bIsOk = cfFinder.FindFile(strRootFolderPath);////	while (bIsOk)////	{////		bIsOk = cfFinder.FindNextFile();////		strFilePath = cfFinder.GetFilePath();////		if (cfFinder.IsDirectory() && !cfFinder.IsDots())////		{////			strFilePath = cfFinder.GetFilePath();////			HandleFileTest(strFilePath, iCount, hwndLoadingDlg, hwndProgressDlg);////			continue;////		}////		if (!cfFinder.IsDots())////		{////			iCount++;////////			//send message to update progressBar in childDlg////			::SendMessage(hwndProgressDlg, UWM_SENDMSGUPDATEPROGRESS, (WPARAM)iCount, 0);////////			//send message to update value in Main Dialog////			::SendMessage(hwndLoadingDlg, UWM_SENDMSGUPDATEMAINDLG, (WPARAM)iCount, 0);////////			if (m_bCancelTest)////			{////				return;////			}////		}////	}////	cfFinder.Close();////	return;////}
 
-void CLoadingFileDlg::CountFileDelay(CString path, int& nCount)
-{
-	CString strRootFolderPath = path + _T("\\*.*");
-	CFileFind cfFinder;
-	CString strFilePath;
-	bool returnValue = false;
-
-	BOOL bIsOk = cfFinder.FindFile(strRootFolderPath);
-	while (bIsOk)
-	{
-		bIsOk = cfFinder.FindNextFile();
-		strFilePath = cfFinder.GetFilePath();
-		if (cfFinder.IsDirectory() && !cfFinder.IsDots())
-		{
-			strFilePath = cfFinder.GetFilePath();
-			CountFileDelay(strFilePath, nCount);
-			continue;
-		}
-		if (!cfFinder.IsDots())
-		{
-			nCount++;
-
-			Sleep(100);
-			//send message to update progressBar in childDlg
-			::SendMessage(m_pProgressHWND, UWM_SENDCALCULATEVAL, (WPARAM)nCount, 0);
-
-			//Update total file to mainDlg (have to ussing main thread)
-			CString strTemp;
-			strTemp.Format(L"%d", nCount);
-			m_staticTotalFile.SetWindowTextW(strTemp);
-
-			if (nCount == m_iFileTotal || m_bCancel)
-			{
-				return;
-			}
-		}
-	}
-	cfFinder.Close();
-}
-*/
 
 
 int CLoadingFileDlg::GetFileNumber()
@@ -324,7 +273,7 @@ void CLoadingFileDlg::CountFileDelay(CString path, int& nCount, ICountFileObserv
 			Sleep(100);
 			bool shouldFinished = false;
 			observer->OnCountFileChanged(nCount, shouldFinished);
-			
+
 			if (shouldFinished)
 			{
 				return;
