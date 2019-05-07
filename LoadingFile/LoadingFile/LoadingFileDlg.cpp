@@ -234,7 +234,8 @@ LRESULT CLoadingFileDlg::OnReceiveHWNDMessages(WPARAM wParam, LPARAM lParam)
 	m_iFileCurrentNumber = 0;
 	CountFileTask* task = new CountFileTask(this, m_strFolderPath);
 	m_pMyThread = AfxBeginThread(ExecuteMyThread, task);
-
+	m_pMyThread->m_bAutoDelete = FALSE;
+	m_pMyThread->ResumeThread();
 	return 0L;
 }
 
@@ -256,7 +257,15 @@ void CLoadingFileDlg::CountFileDelay(CString path, int& nCount, ICountFileObserv
 	BOOL bIsOk = cfFinder.FindFile(strRootFolderPath);
 	while (bIsOk)
 	{
-		
+		DWORD temp;
+		if ((temp = WaitForSingleObject(m_StopThread->m_hObject, 0)) == WAIT_OBJECT_0)
+		{
+			// Set event
+			m_WaitThread->SetEvent();
+
+			return;
+		}
+
 		bIsOk = cfFinder.FindNextFile();
 		strFilePath = cfFinder.GetFilePath();
 		if (cfFinder.IsDirectory() && !cfFinder.IsDots())
@@ -274,13 +283,7 @@ void CLoadingFileDlg::CountFileDelay(CString path, int& nCount, ICountFileObserv
 			{
 				return;
 			}*/
-			if (::WaitForSingleObject(m_StopThread->m_hObject, 0) == WAIT_OBJECT_0)
-			{
-				// Set event
-				m_WaitThread->SetEvent();
-
-				return;
-			}
+			
 		}
 	}
 	cfFinder.Close();
