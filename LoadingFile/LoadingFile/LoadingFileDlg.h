@@ -55,4 +55,7 @@ public:
 	int GetFileNumber();
 	
 	virtual void OnCountFileChanged(int nCount, bool& shouldFinished);
+private:
+	static CEvent *m_StopThread;
+	static CEvent *m_WaitThread;
 };

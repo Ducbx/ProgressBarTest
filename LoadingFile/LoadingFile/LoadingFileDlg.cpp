@@ -62,6 +62,8 @@ CLoadingFileDlg::CLoadingFileDlg(CWnd* pParent /*=NULL*/)
 	m_pProgressHWND = NULL;
 	m_bCancel = FALSE;
 }
+CEvent* CLoadingFileDlg::m_StopThread = new CEvent(FALSE, FALSE);
+CEvent* CLoadingFileDlg::m_WaitThread = new CEvent(FALSE, FALSE);
 
 void CLoadingFileDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -218,10 +220,6 @@ void CLoadingFileDlg::OnBnClickedBtnCal()
 
 
 
-//struct SCountFile//{//	CString m_strFolderPath;//	HWND m_hwndLoadingDlg;//	HWND m_hwndProgressDlg;//	SCountFile(CString strFolderPath, HWND hwndLoadingDlg, HWND hwndProgressDlg)//	{//		this->m_strFolderPath = strFolderPath;//		this->m_hwndLoadingDlg = hwndLoadingDlg;//		this->m_hwndProgressDlg = hwndProgressDlg;//	}//};//LRESULT CLoadingFileDlg::OnReceiveHWNDMessages(WPARAM wParam, LPARAM lParam)//{//	HWND hwndTemp = (HWND)wParam;//	m_hwndProgressDlg = hwndTemp;//	// start a count file task on other thread//	SCountFile* pTask = new SCountFile(m_strFolderPath, m_hwndLoadingDlg, m_hwndProgressDlg);//	m_pMyThread = AfxBeginThread(ExecuteMyThread, pTask);//	return 0L;//}////UINT CLoadingFileDlg::ExecuteMyThread(LPVOID pParam)//{//	//count and send value progress//	SCountFile *pTask = (SCountFile*)pParam;//	int iCount = 0;//	HandleFileTest(pTask->m_strFolderPath, iCount, pTask->m_hwndLoadingDlg, pTask->m_hwndProgressDlg);//	return 0;//}////void CLoadingFileDlg::HandleFileTest(CString strPath, int& iCount, HWND hwndLoadingDlg, HWND hwndProgressDlg)//{//	CString strRootFolderPath = strPath + _T("\\*.*");//	CFileFind cfFinder;//	CString strFilePath;//	BOOL bShouldFinished = FALSE;//	BOOL bIsOk = cfFinder.FindFile(strRootFolderPath);//	while (bIsOk)//	{//		bIsOk = cfFinder.FindNextFile();//		strFilePath = cfFinder.GetFilePath();//		if (cfFinder.IsDirectory() && !cfFinder.IsDots())//		{//			strFilePath = cfFinder.GetFilePath();//			HandleFileTest(strFilePath, iCount, hwndLoadingDlg, hwndProgressDlg);//			continue;//		}//		if (!cfFinder.IsDots())//		{//			iCount++;//			//send message to update progressBar in childDlg//			::SendMessage(hwndProgressDlg, UWM_SENDMSGUPDATEPROGRESS, (WPARAM)iCount, 0);////			//send message to update value in Main Dialog//			::SendMessage(hwndLoadingDlg, UWM_SENDMSGUPDATEMAINDLG, (WPARAM)iCount, 0);//			if (m_bCancelTest)//			{//				return;//			}//		}//	}//	cfFinder.Close();//	return;//}
-
-
-
 int CLoadingFileDlg::GetFileNumber()
 {
 	return m_iFileTotal;
@@ -258,6 +256,7 @@ void CLoadingFileDlg::CountFileDelay(CString path, int& nCount, ICountFileObserv
 	BOOL bIsOk = cfFinder.FindFile(strRootFolderPath);
 	while (bIsOk)
 	{
+		
 		bIsOk = cfFinder.FindNextFile();
 		strFilePath = cfFinder.GetFilePath();
 		if (cfFinder.IsDirectory() && !cfFinder.IsDots())
@@ -271,8 +270,15 @@ void CLoadingFileDlg::CountFileDelay(CString path, int& nCount, ICountFileObserv
 			nCount++;
 			bool shouldFinished = false;
 			observer->OnCountFileChanged(nCount, shouldFinished);
-			if (shouldFinished)
+			/*if (shouldFinished)
 			{
+				return;
+			}*/
+			if (::WaitForSingleObject(m_StopThread->m_hObject, 0) == WAIT_OBJECT_0)
+			{
+				// Set event
+				m_WaitThread->SetEvent();
+
 				return;
 			}
 		}
@@ -294,8 +300,17 @@ void CLoadingFileDlg::OnCountFileChanged(int nCount, bool& shouldFinished)
 
 LRESULT CLoadingFileDlg::OnReceiveCancelSignalMessages(WPARAM wParam, LPARAM lParam)
 {
-	m_bCancel = TRUE;
+	//m_bCancel = TRUE;
+	m_StopThread->SetEvent();
 
+	// Wait until thread finished
+	WaitForSingleObject(m_WaitThread->m_hObject, INFINITE);
+
+	// Close handles
+	//::CloseHandle(m_StopThread);
+	//::CloseHandle(m_WaitThread);
+	m_StopThread->ResetEvent();
+	m_WaitThread->ResetEvent();
 	return 0L;
 }
 
