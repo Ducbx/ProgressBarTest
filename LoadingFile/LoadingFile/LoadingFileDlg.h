@@ -7,7 +7,7 @@
 #include "ICountFileObserver.h"
 
 // CLoadingFileDlg dialog
-class CLoadingFileDlg : public CDialogEx, public ICountFileObserver
+class CLoadingFileDlg : public CDialogEx
 {
 // Construction
 public:
@@ -40,22 +40,24 @@ private:
 	int m_iFileCurrentNumber;
 	CWinThread* m_pMyThread;
 	HWND m_pProgressHWND;
-	BOOL m_bCancel;
+	HWND m_pLoadingHWND;
 
 public:
 	afx_msg void OnBnClickedBtnOpen();
 	afx_msg void OnBnClickedBtnCal();
 	afx_msg LRESULT OnReceiveHWNDMessages(WPARAM, LPARAM);
+	afx_msg LRESULT OnReceiveHWNDMessagesTest(WPARAM , LPARAM );
 	afx_msg LRESULT OnReceiveCancelSignalMessages(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnReceiveUpdateMainDlgMessages(WPARAM wParam, LPARAM lParam);
+
 public:
 	void CountFile();
 	static UINT ExecuteMyThread(LPVOID pParam);
-	static void CountFileDelay(CString path, int &iCount, ICountFileObserver* dialog);
-	int GetFileNumber();
+	static UINT ExecuteMyThreadTest(LPVOID pParam);
+	static void CountFileDelay(CString path, int &iCount, CLoadingFileDlg* dialog);
 	
-	virtual void OnCountFileChanged(int nCount, bool& shouldFinished);
+	void OnCountFileChanged(int nCount, bool& shouldFinished);
+	static void HandleFileTest(CString strPath, int& iCount, HWND hwndLoadingDlg, HWND hwndProgressDlg);
 private:
-	static CEvent *m_StopThread;
-	static CEvent *m_WaitThread;
+	static HANDLE m_hCancel;
 };
